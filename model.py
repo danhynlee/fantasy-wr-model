@@ -117,4 +117,13 @@ def score_wrs(wr_table: pl.DataFrame, weights: dict) -> pl.DataFrame:
 
 def get_ppr_outcomes(data: dict, start_week: int, end_week: int) -> pl.DataFrame:
     """Actual PPR points per game for each player over the given weeks."""
-    # new: you'll write this one
+
+    stats = data["stats"].filter((pl.col("season_type") == "REG") & (pl.col("week").is_between(start_week, end_week)))
+
+    ppr_stats = stats.filter((pl.col("position") == "WR")).group_by("player_id").agg(
+        pl.col("player_display_name").first().alias("player_name"),
+        pl.col("fantasy_points_ppr").mean().alias("ppr_pg"),
+        pl.col("game_id").count().alias("games_played"),
+    )
+
+    return ppr_stats
